@@ -1,0 +1,350 @@
+<!--
+ Copyright 2025 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlloyDB Setup Manager</title>
+    <style>
+        :root {
+            --primary: #4285F4;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #202124;
+            --border: #dadce0;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card-bg);
+            width: 600px;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            color: #5f6368;
+        }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Typography & Forms */
+        h2 { margin-top: 0; color: #1a73e8; }
+        p { color: #5f6368; font-size: 14px; margin-bottom: 20px; }
+        .disclaimer {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #d2e3fc;
+        }
+
+        label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px; color: #3c4043; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #3367d6; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Billing Status Message */
+        .billing-msg {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            display: none;
+        }
+        .billing-msg.success { background-color: #e6f4ea; color: #137333; display: block; }
+        .billing-msg.error { background-color: #fce8e6; color: #c5221f; display: block; }
+        .billing-msg.running { background-color: #e8f0fe; color: #1a73e8; display: block; }
+
+        /* Console Log Panel */
+        #console-panel {
+            margin-top: 25px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            display: none;
+        }
+        .terminal {
+            background-color: #1e1e1e;
+            color: #4CAF50;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            padding: 15px;
+            border-radius: 6px;
+            height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            float: right;
+        }
+        .status-running { background: #e8f0fe; color: #1a73e8; }
+        .status-success { background: #e6f4ea; color: #137333; }
+        .status-error { background: #fce8e6; color: #c5221f; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="disclaimer">
+        ℹ️ <b>Note:</b> This tool assumes you are authenticated in your environment (e.g., Cloud Shell or local <code>gcloud auth login</code>) with permissions for the project provided.
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('billing')">1. Billing Setup</div>
+        <div class="tab" onclick="switchTab('alloydb')">2. AlloyDB Setup</div>
+    </div>
+
+    <!-- TAB 1: BILLING -->
+    <div id="billing" class="tab-content active">
+        <h2>Link Project Billing</h2>
+        <p>Ensure your project is linked to an active billing account before creating resources.</p>
+        <form id="billingForm">
+            <label for="billing_project_id">Google Cloud Project ID</label>
+            <input type="text" id="billing_project_id" name="project_id" placeholder="e.g. my-gcp-project" required>
+            
+            <button type="submit" id="billingBtn">Link to Active Billing Account</button>
+            <div id="billing-msg" class="billing-msg"></div>
+        </form>
+    </div>
+
+    <!-- TAB 2: ALLOYDB -->
+    <div id="alloydb" class="tab-content">
+        <h2>Create AlloyDB Cluster</h2>
+        <p>Configure and deploy your AlloyDB environment.</p>
+        <form id="deployForm">
+            <label for="project_id">Google Cloud Project ID</label>
+            <input type="text" id="project_id" name="project_id" placeholder="e.g. my-gcp-project" required>
+
+            <label for="region">Region</label>
+            <select id="region" name="region">
+                <option value="us-central1">us-central1 (Iowa)</option>
+                <option value="europe-west1">europe-west1 (Belgium)</option>
+                <option value="asia-southeast1">asia-southeast1 (Singapore)</option>
+            </select>
+
+            <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label for="cluster_id">Cluster Name</label>
+                    <input type="text" id="cluster_id" name="cluster_id" value="my-alloydb-cluster" required>
+                </div>
+                <div style="flex: 1;">
+                    <label for="instance_id">Instance Name</label>
+                    <input type="text" id="instance_id" name="instance_id" value="my-primary-inst" required>
+                </div>
+            </div>
+
+            <label for="password">Database Password</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit" id="deployBtn">Start Deployment</button>
+        </form>
+
+        <!-- LOGS PANEL (Now specifically inside AlloyDB Tab) -->
+        <div id="console-panel">
+            <div style="margin-bottom: 10px;">
+                <b>Deployment Logs</b>
+                <span id="status-badge" class="status-badge status-running">Initializing...</span>
+            </div>
+            <div id="terminal" class="terminal">Waiting for commands...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Tab Switching Logic
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Find index to set active tab class
+        const index = tabId === 'billing' ? 0 : 1;
+        document.querySelectorAll('.tab')[index].classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // Shared Project ID Logic (syncs inputs between tabs)
+    document.getElementById('billing_project_id').addEventListener('input', (e) => {
+        document.getElementById('project_id').value = e.target.value;
+    });
+    document.getElementById('project_id').addEventListener('input', (e) => {
+        document.getElementById('billing_project_id').value = e.target.value;
+    });
+
+    // Helper: Reset Console (Used only for AlloyDB now)
+    function startConsole(msg) {
+        const panel = document.getElementById('console-panel');
+        const terminal = document.getElementById('terminal');
+        const badge = document.getElementById('status-badge');
+        
+        panel.style.display = 'block';
+        terminal.innerText = msg + "\n";
+        badge.className = 'status-badge status-running';
+        badge.innerText = 'Running...';
+    }
+
+    // --- BILLING SUBMISSION ---
+    document.getElementById('billingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('billingBtn');
+        const msgDiv = document.getElementById('billing-msg');
+        
+        btn.disabled = true;
+        btn.innerText = "Linking...";
+        
+        // Show local status message instead of console
+        msgDiv.innerText = "Processing request...";
+        msgDiv.className = 'billing-msg running';
+
+        const formData = new FormData(e.target);
+        try {
+            const response = await fetch('/link-billing', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                msgDiv.innerText = data.message;
+                msgDiv.className = 'billing-msg success';
+                setTimeout(() => switchTab('alloydb'), 1500); // Auto switch to next tab
+            } else {
+                msgDiv.innerText = "Error: " + data.message;
+                msgDiv.className = 'billing-msg error';
+            }
+        } catch (err) {
+            msgDiv.innerText = "Network Error: " + err;
+            msgDiv.className = 'billing-msg error';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Link to Active Billing Account";
+        }
+    });
+
+    // --- ALLOYDB DEPLOYMENT ---
+    let pollInterval;
+    document.getElementById('deployForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('deployBtn');
+        btn.disabled = true;
+        btn.innerText = "Deployment Started...";
+        
+        startConsole("Initializing AlloyDB Deployment Script...");
+
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch('/deploy', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.deployment_id) {
+                // Start polling for logs
+                if (pollInterval) clearInterval(pollInterval);
+                pollInterval = setInterval(() => pollLogs(data.deployment_id), 2000);
+            } else {
+                const terminal = document.getElementById('terminal');
+                terminal.innerText += "Failed to start deployment: " + data.error + "\n";
+                btn.disabled = false;
+            }
+        } catch (err) {
+            const terminal = document.getElementById('terminal');
+            terminal.innerText += "Network Error: " + err + "\n";
+            btn.disabled = false;
+        }
+    });
+
+    async function pollLogs(id) {
+        try {
+            const res = await fetch(`/logs/${id}`);
+            const data = await res.json();
+            
+            if (data.logs) {
+                const terminal = document.getElementById('terminal');
+                terminal.innerText = data.logs.join('');
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            if (data.status === 'done') {
+                clearInterval(pollInterval);
+                document.getElementById('status-badge').className = 'status-badge status-success';
+                document.getElementById('status-badge').innerText = 'Complete';
+                document.getElementById('deployBtn').innerText = "Deployment Complete";
+            } else if (data.status === 'error') {
+                clearInterval(pollInterval);
+                document.getElementById('status-badge').className = 'status-badge status-error';
+                document.getElementById('status-badge').innerText = 'Error';
+                document.getElementById('deployBtn').disabled = false;
+                document.getElementById('deployBtn').innerText = "Retry";
+            }
+        } catch (e) {
+            console.error("Polling error", e);
+        }
+    }
+</script>
+
+</body>
+</html>
