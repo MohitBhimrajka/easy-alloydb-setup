@@ -7,11 +7,13 @@ It will open a new tab (make sure you are in the right email account), clone the
 
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/AbiramiSukumaran/easy-alloydb-setup&cloudshell_open_in_editor=README.md)
 
+
 ## Run
    
 In the Cloud Shell Terminal at the bottom, type the following and hit Enter:
 
-sh run.sh
+#### sh run.sh
+
 
 ## Access UI!
 
@@ -26,9 +28,9 @@ Select "Preview on port 8080".
 
 
 
-Manual commands for above steps:
+#### Alternative manual commands for above steps:
 
-Run commands in your Cloud Shell Terminal one by one:
+1. Run commands in your Cloud Shell Terminal one by one:
 
 git clone https://github.com/AbiramiSukumaran/easy-alloydb-setup
 
@@ -36,12 +38,12 @@ cd easy-alloydb-setup
 
 sh run.sh
 
-Access UI!
+2. Access UI!
 
 
 
 
-⚠️⚠️⚠️ Requirements
+#### ⚠️⚠️⚠️ Requirements
 
 Permissions: You must have Owner or Editor permissions on the Google Cloud Project you intend to deploy to.
 
