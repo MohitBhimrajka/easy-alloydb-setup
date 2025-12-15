@@ -141,6 +141,14 @@
         .status-success { background: #e6f4ea; color: #137333; }
         .status-error { background: #fce8e6; color: #c5221f; }
         .status-warning { background: #fef7e0; color: #b06000; }
+        
+        .region-loading {
+            font-style: italic;
+            color: #666;
+            font-size: 12px;
+            margin-left: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -177,8 +185,13 @@
             <label for="project_id">Google Cloud Project ID</label>
             <input type="text" id="project_id" name="project_id" placeholder="e.g. my-gcp-project" required>
 
-            <label for="region">Region</label>
+            <label for="region">
+                Region 
+                <span id="region-loader" class="region-loading">Loading regions...</span>
+                <button type="button" onclick="loadRegions()" style="background:none; border:none; color:#4285F4; font-size:12px; cursor:pointer; padding:0; width:auto; margin-left:5px;">(Refresh List)</button>
+            </label>
             <select id="region" name="region">
+                <!-- Fallback options if API fails -->
                 <option value="us-central1">us-central1 (Iowa)</option>
                 <option value="europe-west1">europe-west1 (Belgium)</option>
                 <option value="asia-southeast1">asia-southeast1 (Singapore)</option>
@@ -223,6 +236,14 @@
         const index = tabId === 'billing' ? 0 : 1;
         document.querySelectorAll('.tab')[index].classList.add('active');
         document.getElementById(tabId).classList.add('active');
+        
+        // If switching to AlloyDB, check if we need to load regions (if list is short/default)
+        if (tabId === 'alloydb') {
+            const pid = document.getElementById('project_id').value;
+            if (pid && document.getElementById('region').options.length <= 3) {
+                 loadRegions();
+            }
+        }
     }
 
     // Shared Project ID Logic (syncs inputs between tabs)
@@ -243,6 +264,51 @@
         terminal.innerText = msg + "\n";
         badge.className = 'status-badge status-running';
         badge.innerText = 'Running...';
+    }
+
+    // --- REGION LOADING ---
+    async function loadRegions() {
+        const pid = document.getElementById('project_id').value;
+        if (!pid) {
+            alert("Please enter a Google Cloud Project ID first.");
+            return;
+        }
+
+        const loader = document.getElementById('region-loader');
+        const select = document.getElementById('region');
+        
+        loader.style.display = 'inline';
+        
+        try {
+            // Encode the project ID for safety
+            const url = `/regions?project_id=${encodeURIComponent(pid)}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.status === 'success' && data.regions && data.regions.length > 0) {
+                // Clear existing options
+                select.innerHTML = '';
+                
+                data.regions.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r;
+                    opt.innerText = r;
+                    // Auto-select us-central1 if available
+                    if (r === 'us-central1') opt.selected = true;
+                    select.appendChild(opt);
+                });
+            } else {
+                console.warn("Could not fetch regions, keeping defaults. Msg:", data.message);
+                // Optionally alert the user if it was a manual click
+                if(data.message) alert("Failed to fetch regions: " + data.message);
+            }
+        } catch (e) {
+            console.error("Region fetch error", e);
+            alert("Network error fetching regions.");
+        } finally {
+            loader.style.display = 'none';
+        }
     }
 
     // --- BILLING SUBMISSION ---
