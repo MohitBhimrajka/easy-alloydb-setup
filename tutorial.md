@@ -1,6 +1,8 @@
 # AlloyDB Easy Setup for Development Purposes
 This tool helps you link a billing account and spin up an AlloyDB Cluster + Instance (with all other API & network dependencies) using your active Google Cloud credentials.
 
+## Click to start.
+
 ## Run
    
 In the Cloud Shell Terminal at the bottom, type the following and hit Enter:
