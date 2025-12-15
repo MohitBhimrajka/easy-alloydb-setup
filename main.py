@@ -112,6 +112,32 @@ def run_gcloud_script(deploy_id, project, region, password, cluster, instance):
 def form():
     return render_template('index.html')
 
+@app.route('/regions', methods=['GET'])
+def get_regions():
+    """Fetches list of available Google Cloud regions."""
+    try:
+        project_id = request.args.get('project_id')
+        
+        # We MUST have a project ID to fetch regions reliably
+        if not project_id:
+            return jsonify({'status': 'error', 'message': 'Project ID is missing. Please enter a Project ID first.'})
+
+        # Explicitly pass --project flag to gcloud
+        cmd = ["gcloud", "compute", "regions", "list", "--format=json", f"--project={project_id}"]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        regions_data = json.loads(result.stdout)
+        
+        # Extract name and sort
+        regions = sorted([r['name'] for r in regions_data])
+        
+        return jsonify({'status': 'success', 'regions': regions})
+    except subprocess.CalledProcessError as e:
+        # Return the stderr from gcloud so we know why it failed (e.g. invalid project ID)
+        return jsonify({'status': 'error', 'message': f"GCloud Error: {e.stderr}"})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
 @app.route('/link-billing', methods=['POST'])
 def link_billing():
     project_id = request.form.get('project_id')
