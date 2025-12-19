@@ -32,7 +32,7 @@ echo "Starting deployment for Project: $PROJECT_ID..."
 gcloud config set project $PROJECT_ID
 
 # 2. Enable APIs
-gcloud services enable alloydb.googleapis.com servicenetworking.googleapis.com compute.googleapis.com
+gcloud services enable alloydb.googleapis.com servicenetworking.googleapis.com compute.googleapis.com cloudresourcemanager.googleapis.com
 
 # 3. Network Setup
 # Check if VPC exists to avoid errors on re-runs
