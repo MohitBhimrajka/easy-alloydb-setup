@@ -117,18 +117,265 @@
             padding-top: 20px;
             display: none;
         }
+        
+        /* Console Tabs */
+        .console-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+            border-bottom: 1px solid #333;
+        }
+        .console-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            color: #888;
+            background: #2d2d2d;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s;
+        }
+        .console-tab:hover { color: #ccc; }
+        .console-tab.active {
+            color: #fff;
+            background: #1e1e1e;
+        }
+        .console-content { display: none; }
+        .console-content.active { display: block; }
+        
         .terminal {
             background-color: #1e1e1e;
             color: #4CAF50;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 12px;
             padding: 15px;
-            border-radius: 6px;
-            height: 250px;
+            border-radius: 0 0 6px 6px;
+            height: 350px;
             overflow-y: auto;
             white-space: pre-wrap;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
         }
+        
+        /* Summary Panel */
+        .summary-panel {
+            background: #1e1e1e;
+            border-radius: 0 0 6px 6px;
+            padding: 20px;
+            height: 350px;
+            overflow-y: auto;
+            color: #e0e0e0;
+        }
+        .summary-section {
+            margin-bottom: 20px;
+        }
+        .summary-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #333;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 8px 16px;
+            font-size: 13px;
+        }
+        .summary-label {
+            color: #888;
+            font-weight: 500;
+        }
+        .summary-value {
+            color: #e0e0e0;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        /* Expandable Command Sections */
+        .command-accordion {
+            margin-bottom: 8px;
+        }
+        .command-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #2d2d2d;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .command-header:hover { background: #383838; }
+        .command-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .command-step {
+            width: 20px;
+            height: 20px;
+            background: #4285F4;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .command-title {
+            font-size: 13px;
+            color: #e0e0e0;
+        }
+        .command-toggle {
+            color: #888;
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        .command-header.expanded .command-toggle { transform: rotate(180deg); }
+        .command-body {
+            display: none;
+            padding: 12px;
+            background: #252525;
+            border-radius: 0 0 4px 4px;
+            margin-top: 1px;
+        }
+        .command-body.show { display: block; }
+        .command-description {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .command-code {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            color: #98FB98;
+            position: relative;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .copy-btn, .run-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .copy-btn { background: #4285F4; }
+        .run-btn { background: #34a853; }
+        .copy-btn:hover, .run-btn:hover { opacity: 1; }
+        .copy-btn.copied { background: #34a853; }
+        .run-btn:disabled { background: #666; cursor: not-allowed; }
+        .cmd-buttons {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 6px;
+        }
+        .command-result {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+        }
+        .command-result.success {
+            background: #1a2e1a;
+            border: 1px solid #34a853;
+            color: #81c995;
+        }
+        .command-result.error {
+            background: #2e1a1a;
+            border: 1px solid #ea4335;
+            color: #f28b82;
+        }
+        .command-result.loading {
+            background: #1a1a2e;
+            border: 1px solid #4285F4;
+            color: #8ab4f8;
+        }
+        .result-label {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .result-value {
+            font-size: 14px;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .result-copy {
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            background: #252525;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .quick-actions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .quick-actions-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+        .quick-actions-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn.primary {
+            background: #34a853;
+            color: #fff;
+        }
+        .action-btn.secondary {
+            background: #4285F4;
+            color: #fff;
+        }
+        .action-btn:hover { opacity: 0.9; }
+        .action-btn:disabled { background: #666; cursor: not-allowed; }
+        .quick-actions-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            border-left: 2px solid #666;
+        }
+        .quick-actions-result {
+            margin-top: 12px;
+        }
+        
         .status-badge {
             display: inline-block;
             padding: 4px 8px;
@@ -221,10 +468,29 @@
         <!-- LOGS PANEL (Now specifically inside AlloyDB Tab) -->
         <div id="console-panel">
             <div style="margin-bottom: 10px;">
-                <b>Deployment Logs</b>
+                <b>Deployment</b>
                 <span id="status-badge" class="status-badge status-running">Initializing...</span>
             </div>
-            <div id="terminal" class="terminal">Waiting for commands...</div>
+            
+            <!-- Console Tabs -->
+            <div class="console-tabs">
+                <button class="console-tab active" onclick="switchConsoleTab('logs')">Logs</button>
+                <button class="console-tab" onclick="switchConsoleTab('summary')" id="summary-tab">Summary</button>
+            </div>
+            
+            <!-- Logs Content -->
+            <div id="logs-content" class="console-content active">
+                <div id="terminal" class="terminal">Waiting for commands...</div>
+            </div>
+            
+            <!-- Summary Content -->
+            <div id="summary-content" class="console-content">
+                <div class="summary-panel" id="summary-panel">
+                    <div style="color: #888; text-align: center; padding: 40px;">
+                        Summary will be available after deployment completes.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -248,6 +514,332 @@
                  loadRegions();
             }
         }
+    }
+    
+    // Console Tab Switching
+    function switchConsoleTab(tabId) {
+        document.querySelectorAll('.console-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.console-content').forEach(c => c.classList.remove('active'));
+        
+        if (tabId === 'logs') {
+            document.querySelector('.console-tab:first-child').classList.add('active');
+            document.getElementById('logs-content').classList.add('active');
+        } else {
+            document.getElementById('summary-tab').classList.add('active');
+            document.getElementById('summary-content').classList.add('active');
+        }
+    }
+    
+    // Toggle command accordion
+    function toggleCommand(element) {
+        const header = element;
+        const body = header.nextElementSibling;
+        header.classList.toggle('expanded');
+        body.classList.toggle('show');
+    }
+    
+    // Copy command to clipboard
+    function copyCommand(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+    
+    // Store current deployment config for running commands
+    let currentDeployConfig = null;
+    
+    // Run all commands sequentially
+    async function runAll(btn) {
+        if (!currentDeployConfig) {
+            alert('No deployment configuration available');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.textContent = 'Running...';
+        
+        const resultDiv = document.getElementById('quick-actions-result');
+        resultDiv.innerHTML = `
+            <div class="command-result loading">
+                <div class="result-label">Step 1/2: Getting Private IP...</div>
+                <div class="result-value">Please wait...</div>
+            </div>
+        `;
+        
+        try {
+            // Step 1: Get IP
+            const ipFormData = new FormData();
+            ipFormData.append('command_type', 'get_ip');
+            ipFormData.append('project_id', currentDeployConfig.project_id);
+            ipFormData.append('region', currentDeployConfig.region);
+            ipFormData.append('cluster', currentDeployConfig.cluster_name);
+            ipFormData.append('instance', currentDeployConfig.instance_name);
+            
+            const ipResponse = await fetch('/run-command', { method: 'POST', body: ipFormData });
+            const ipData = await ipResponse.json();
+            
+            let privateIP = ipData.status === 'success' ? ipData.output : 'Failed to retrieve';
+            
+            // Update progress
+            resultDiv.innerHTML = `
+                <div class="command-result loading">
+                    <div class="result-label">Step 2/2: Creating Firewall Rule...</div>
+                    <div class="result-value">Private IP: ${escapeHtml(privateIP)}</div>
+                </div>
+            `;
+            
+            // Step 2: Create Firewall
+            const fwFormData = new FormData();
+            fwFormData.append('command_type', 'create_firewall');
+            fwFormData.append('project_id', currentDeployConfig.project_id);
+            fwFormData.append('region', currentDeployConfig.region);
+            fwFormData.append('cluster', currentDeployConfig.cluster_name);
+            fwFormData.append('instance', currentDeployConfig.instance_name);
+            
+            const fwResponse = await fetch('/run-command', { method: 'POST', body: fwFormData });
+            const fwData = await fwResponse.json();
+            
+            // Show final results
+            const fwStatus = fwData.status === 'success' ? 'Created' : 'Failed';
+            
+            resultDiv.innerHTML = `
+                <div class="command-result success">
+                    <div class="result-label">All Commands Complete</div>
+                    <div class="summary-grid" style="margin-top: 8px;">
+                        <span class="summary-label">Private IP</span>
+                        <span class="summary-value">${escapeHtml(privateIP)}</span>
+                        <span class="summary-label">Firewall</span>
+                        <span class="summary-value">${escapeHtml(fwData.message || fwStatus)}</span>
+                    </div>
+                    <div class="result-copy">
+                        <button class="copy-btn" onclick="copyCommand(this, '${escapeHtml(privateIP)}')">Copy IP</button>
+                    </div>
+                </div>
+            `;
+            
+            btn.textContent = 'Done';
+            btn.style.background = '#34a853';
+            
+        } catch (err) {
+            resultDiv.innerHTML = `
+                <div class="command-result error">
+                    <div class="result-label">Error</div>
+                    <div class="result-value">${escapeHtml(err.toString())}</div>
+                </div>
+            `;
+            btn.textContent = 'Retry';
+            btn.disabled = false;
+        }
+    }
+    
+    // Copy all connection details
+    function copyAllDetails() {
+        if (!currentDeployConfig) {
+            alert('No deployment configuration available');
+            return;
+        }
+        
+        const details = `AlloyDB Connection Details
+========================
+Project ID: ${currentDeployConfig.project_id}
+Region: ${currentDeployConfig.region}
+Cluster: ${currentDeployConfig.cluster_name}
+Instance: ${currentDeployConfig.instance_name}
+User: ${currentDeployConfig.database_user}
+Port: ${currentDeployConfig.database_port}
+Password: <<your_set_password>>
+Network: ${currentDeployConfig.network}
+Subnet: ${currentDeployConfig.subnet}`;
+        
+        navigator.clipboard.writeText(details).then(() => {
+            const btn = document.getElementById('copy-all-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = 'Copy All'; }, 2000);
+        });
+    }
+    
+    // Run a command and display the result
+    async function runCommand(commandType, btn) {
+        if (!currentDeployConfig) {
+            alert('No deployment configuration available');
+            return;
+        }
+        
+        const resultId = commandType === 'get_ip' ? 'result-get-ip' : 'result-firewall';
+        const resultDiv = document.getElementById(resultId);
+        
+        // Show loading state
+        btn.disabled = true;
+        btn.textContent = 'Running...';
+        resultDiv.innerHTML = `
+            <div class="command-result loading">
+                <div class="result-label">Executing...</div>
+                <div class="result-value">Please wait...</div>
+            </div>
+        `;
+        
+        try {
+            const formData = new FormData();
+            formData.append('command_type', commandType);
+            formData.append('project_id', currentDeployConfig.project_id);
+            formData.append('region', currentDeployConfig.region);
+            formData.append('cluster', currentDeployConfig.cluster_name);
+            formData.append('instance', currentDeployConfig.instance_name);
+            
+            const response = await fetch('/run-command', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const displayValue = commandType === 'get_ip' ? data.output : data.message;
+                resultDiv.innerHTML = `
+                    <div class="command-result success">
+                        <div class="result-label">${commandType === 'get_ip' ? 'Private IP Address' : 'Result'}</div>
+                        <div class="result-value">${escapeHtml(displayValue)}</div>
+                        <div class="result-copy">
+                            <button class="copy-btn" onclick="copyCommand(this, '${escapeHtml(data.output || data.message)}')">Copy</button>
+                        </div>
+                    </div>
+                `;
+                btn.textContent = 'Done';
+                btn.style.background = '#34a853';
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="command-result error">
+                        <div class="result-label">Error</div>
+                        <div class="result-value">${escapeHtml(data.message || data.output)}</div>
+                    </div>
+                `;
+                btn.textContent = 'Retry';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            resultDiv.innerHTML = `
+                <div class="command-result error">
+                    <div class="result-label">Network Error</div>
+                    <div class="result-value">${escapeHtml(err.toString())}</div>
+                </div>
+            `;
+            btn.textContent = 'Retry';
+            btn.disabled = false;
+        }
+    }
+    
+    // Render summary panel
+    function renderSummary(summary) {
+        if (!summary) return;
+        
+        const panel = document.getElementById('summary-panel');
+        const conn = summary.connection;
+        const cmds = summary.commands;
+        
+        // Store config for running commands later
+        currentDeployConfig = conn;
+        
+        panel.innerHTML = `
+            <div class="quick-actions">
+                <div class="quick-actions-header">
+                    <span class="quick-actions-title">Quick Actions</span>
+                    <div class="quick-actions-buttons">
+                        <button class="action-btn primary" onclick="runAll(this)">Run All</button>
+                        <button class="action-btn secondary" id="copy-all-btn" onclick="copyAllDetails()">Copy All</button>
+                    </div>
+                </div>
+                <div class="quick-actions-hint">
+                    Run All will fetch the private IP and create the firewall rule. Copy All includes all connection details.
+                </div>
+                <div id="quick-actions-result" class="quick-actions-result"></div>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-section-title">Database Connection</div>
+                <div class="summary-grid">
+                    <span class="summary-label">Cluster</span>
+                    <span class="summary-value">${escapeHtml(conn.cluster_name)}</span>
+                    <span class="summary-label">Instance</span>
+                    <span class="summary-value">${escapeHtml(conn.instance_name)}</span>
+                    <span class="summary-label">User</span>
+                    <span class="summary-value">${escapeHtml(conn.database_user)}</span>
+                    <span class="summary-label">Port</span>
+                    <span class="summary-value">${escapeHtml(conn.database_port)}</span>
+                    <span class="summary-label">Password</span>
+                    <span class="summary-value" style="color: #888;">&lt;&lt;your_set_password&gt;&gt;</span>
+                </div>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-section-title">Network Configuration</div>
+                <div class="summary-grid">
+                    <span class="summary-label">Project ID</span>
+                    <span class="summary-value">${escapeHtml(conn.project_id)}</span>
+                    <span class="summary-label">Region</span>
+                    <span class="summary-value">${escapeHtml(conn.region)}</span>
+                    <span class="summary-label">VPC Network</span>
+                    <span class="summary-value">${escapeHtml(conn.network)}</span>
+                    <span class="summary-label">Subnet</span>
+                    <span class="summary-value">${escapeHtml(conn.subnet)}</span>
+                    <span class="summary-label">IP Range</span>
+                    <span class="summary-value">${escapeHtml(conn.ip_range)}</span>
+                </div>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-section-title">Manual Commands</div>
+                
+                <div class="command-accordion">
+                    <div class="command-header" onclick="toggleCommand(this)">
+                        <div class="command-header-left">
+                            <span class="command-step">1</span>
+                            <span class="command-title">Get Instance Private IP</span>
+                        </div>
+                        <span class="command-toggle">▼</span>
+                    </div>
+                    <div class="command-body">
+                        <div class="command-description">
+                            Retrieve the private IP address of your AlloyDB instance. 
+                            You'll need this IP to configure your application's database connection.
+                        </div>
+                        <div class="command-code">
+                            <div class="cmd-buttons">
+                                <button class="run-btn" id="run-get-ip" onclick="runCommand('get_ip', this)">Run</button>
+                                <button class="copy-btn" onclick="copyCommand(this, \`${cmds.get_ip.replace(/`/g, '\\`')}\`)">Copy</button>
+                            </div>
+${escapeHtml(cmds.get_ip)}</div>
+                        <div id="result-get-ip"></div>
+                    </div>
+                </div>
+                
+                <div class="command-accordion">
+                    <div class="command-header" onclick="toggleCommand(this)">
+                        <div class="command-header-left">
+                            <span class="command-step">2</span>
+                            <span class="command-title">Create Firewall Rule</span>
+                        </div>
+                        <span class="command-toggle">▼</span>
+                    </div>
+                    <div class="command-body">
+                        <div class="command-description">
+                            Create a firewall rule to allow internal traffic to AlloyDB on port 5432. 
+                            This is required for services within the VPC to connect to your database.
+                        </div>
+                        <div class="command-code">
+                            <div class="cmd-buttons">
+                                <button class="run-btn" id="run-firewall" onclick="runCommand('create_firewall', this)">Run</button>
+                                <button class="copy-btn" onclick="copyCommand(this, \`${cmds.firewall.replace(/`/g, '\\`')}\`)">Copy</button>
+                            </div>
+${escapeHtml(cmds.firewall)}</div>
+                        <div id="result-firewall"></div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // Shared Project ID Logic (syncs inputs between tabs)
@@ -413,6 +1005,15 @@
                     const cleanLine = escapeHtml(line);
                     const lowerLine = line.toLowerCase();
                     
+                    // Success messages
+                    if (line.includes('SUCCESS') || line.includes('Complete') || line.includes('done.')) {
+                        return `<span style="color: #4CAF50; font-weight: bold;">${cleanLine}</span>`;
+                    }
+                    // Warning messages
+                    if (line.includes('Note:') || line.includes('Warning')) {
+                        return `<span style="color: #FFA500;">${cleanLine}</span>`;
+                    }
+                    
                     // Logic: If it is an error...
                     if (line.includes("ERROR") || line.includes("EXCEPTION")) {
                         // ...BUT it is a known "benign" error (resource exists), ignore the red color.
@@ -434,6 +1035,11 @@
                 terminal.innerHTML = processedLogs;
                 terminal.scrollTop = terminal.scrollHeight;
             }
+            
+            // Render summary if available
+            if (data.summary) {
+                renderSummary(data.summary);
+            }
 
             const badge = document.getElementById('status-badge');
             const btn = document.getElementById('deployBtn');
@@ -443,15 +1049,19 @@
             // it means the script exited because resources already existed. Treat as Success.
             if (data.status === 'error' && !hasRealError) {
                 clearInterval(pollInterval);
-                badge.className = 'status-success'; // Or status-warning if you prefer
-                badge.innerText = 'Complete (Resources Existed)';
+                badge.className = 'status-badge status-success';
+                badge.innerText = 'Complete';
                 btn.innerText = "Deployment Complete";
-                btn.disabled = false; // Allow re-click if needed
+                btn.disabled = false;
+                // Auto-switch to summary tab if summary is available
+                if (data.summary) {
+                    setTimeout(() => switchConsoleTab('summary'), 500);
+                }
             } 
             // Normal Error Case
             else if (data.status === 'error' && hasRealError) {
                 clearInterval(pollInterval);
-                badge.className = 'status-error';
+                badge.className = 'status-badge status-error';
                 badge.innerText = 'Error';
                 btn.disabled = false;
                 btn.innerText = "Retry";
@@ -460,14 +1070,17 @@
             else if (data.status === 'done') {
                 clearInterval(pollInterval);
                 if (hasRealError) {
-                    // Weird edge case: Script exited 0 but logs had errors?
-                    badge.className = 'status-warning';
-                    badge.innerText = 'Completed with Errors';
+                    badge.className = 'status-badge status-warning';
+                    badge.innerText = 'Completed with Warnings';
                 } else {
-                    badge.className = 'status-success';
+                    badge.className = 'status-badge status-success';
                     badge.innerText = 'Complete';
                 }
                 btn.innerText = "Deployment Complete";
+                // Auto-switch to summary tab
+                if (data.summary) {
+                    setTimeout(() => switchConsoleTab('summary'), 500);
+                }
             }
 
         } catch (e) {
