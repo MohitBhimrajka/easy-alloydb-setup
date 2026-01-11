@@ -45,7 +45,7 @@ fi
 
 if ! gcloud compute networks subnets describe $SUBNET_NAME --region=$REGION > /dev/null 2>&1; then
     echo "Creating Subnet $SUBNET_NAME..."
-    gcloud compute networks subnets create $SUBNET_NAME --region=$REGION --network=$VPC_NAME --range="10.0.0.0/24"
+    gcloud compute networks subnets create $SUBNET_NAME --region=$REGION --network=$VPC_NAME --range="10.0.0.0/24" --enable-private-ip-google-access
 else
     echo "Subnet $SUBNET_NAME already exists. Skipping."
 fi
