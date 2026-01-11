@@ -95,12 +95,10 @@ def generate_deployment_summary(project, region, cluster, instance):
             "database_user": "postgres",
             "database_port": "5432",
             "network": "easy-alloydb-vpc",
-            "subnet": "easy-alloydb-subnet",
-            "ip_range": "10.0.0.0/24"
+            "subnet": "easy-alloydb-subnet"
         },
         "commands": {
-            "get_ip": f"gcloud alloydb instances describe {instance} \\\n  --cluster={cluster} \\\n  --region={region} \\\n  --format=\"get(ipAddress)\"",
-            "firewall": "gcloud compute firewall-rules create allow-alloydb-internal \\\n  --network=easy-alloydb-vpc \\\n  --allow=tcp:5432 \\\n  --source-ranges=10.0.0.0/24"
+            "get_ip": f"gcloud alloydb instances describe {instance} \\\n  --cluster={cluster} \\\n  --region={region} \\\n  --format=\"get(ipAddress)\""
         }
     }
     return summary
@@ -271,37 +269,6 @@ def run_command():
                     'status': 'error',
                     'output': result.stderr,
                     'message': 'Failed to get IP address'
-                })
-                
-        elif command_type == 'create_firewall':
-            # Create firewall rule
-            cmd = [
-                'gcloud', 'compute', 'firewall-rules', 'create', 'allow-alloydb-internal',
-                '--network=easy-alloydb-vpc',
-                '--allow=tcp:5432',
-                '--source-ranges=10.0.0.0/24',
-                f'--project={project}'
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            
-            if result.returncode == 0:
-                return jsonify({
-                    'status': 'success',
-                    'output': result.stdout,
-                    'message': 'Firewall rule created successfully'
-                })
-            else:
-                # Check if already exists
-                if 'already exists' in result.stderr.lower():
-                    return jsonify({
-                        'status': 'success',
-                        'output': 'Firewall rule already exists',
-                        'message': 'Firewall rule already exists'
-                    })
-                return jsonify({
-                    'status': 'error',
-                    'output': result.stderr,
-                    'message': 'Failed to create firewall rule'
                 })
         else:
             return jsonify({
