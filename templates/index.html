@@ -553,121 +553,6 @@
     // Store current deployment config for running commands
     let currentDeployConfig = null;
     
-    // Store fetched IP
-    let fetchedPrivateIP = null;
-    
-    // Get All Details - fetches IP and displays everything
-    async function getAllDetails(btn) {
-        if (!currentDeployConfig) {
-            alert('No deployment configuration available');
-            return;
-        }
-        
-        btn.disabled = true;
-        btn.textContent = 'Fetching...';
-        
-        const resultDiv = document.getElementById('quick-actions-result');
-        resultDiv.innerHTML = `
-            <div class="command-result loading">
-                <div class="result-label">Securely fetching your instance details...</div>
-                <div class="result-value">Retrieving Private IP from AlloyDB...</div>
-            </div>
-        `;
-        
-        try {
-            const formData = new FormData();
-            formData.append('command_type', 'get_ip');
-            formData.append('project_id', currentDeployConfig.project_id);
-            formData.append('region', currentDeployConfig.region);
-            formData.append('cluster', currentDeployConfig.cluster_name);
-            formData.append('instance', currentDeployConfig.instance_name);
-            
-            const response = await fetch('/run-command', { method: 'POST', body: formData });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                fetchedPrivateIP = data.output;
-                
-                resultDiv.innerHTML = `
-                    <div class="command-result success" style="padding: 16px;">
-                        <div class="result-label" style="margin-bottom: 12px;">All Connection Details</div>
-                        <div class="summary-grid" style="gap: 6px 16px;">
-                            <span class="summary-label">Host (Private IP)</span>
-                            <span class="summary-value" style="color: #81c995; font-weight: 600;">${escapeHtml(fetchedPrivateIP)}</span>
-                            <span class="summary-label">Port</span>
-                            <span class="summary-value">${escapeHtml(currentDeployConfig.database_port)}</span>
-                            <span class="summary-label">Database</span>
-                            <span class="summary-value">postgres</span>
-                            <span class="summary-label">User</span>
-                            <span class="summary-value">${escapeHtml(currentDeployConfig.database_user)}</span>
-                            <span class="summary-label">Password</span>
-                            <span class="summary-value" style="color: #888;">&lt;&lt;your_set_password&gt;&gt;</span>
-                            <span class="summary-label">Cluster</span>
-                            <span class="summary-value">${escapeHtml(currentDeployConfig.cluster_name)}</span>
-                            <span class="summary-label">Region</span>
-                            <span class="summary-value">${escapeHtml(currentDeployConfig.region)}</span>
-                            <span class="summary-label">Network</span>
-                            <span class="summary-value">${escapeHtml(currentDeployConfig.network)}</span>
-                            <span class="summary-label">Subnet</span>
-                            <span class="summary-value">${escapeHtml(currentDeployConfig.subnet)}</span>
-                        </div>
-                        <div class="result-copy" style="margin-top: 12px;">
-                            <button class="action-btn secondary" style="padding: 6px 12px;" onclick="copyAllWithIP()">Copy All</button>
-                        </div>
-                    </div>
-                `;
-                btn.textContent = 'Refresh';
-                btn.disabled = false;
-            } else {
-                resultDiv.innerHTML = `
-                    <div class="command-result error">
-                        <div class="result-label">Error fetching IP</div>
-                        <div class="result-value">${escapeHtml(data.message || data.output)}</div>
-                    </div>
-                `;
-                btn.textContent = 'Retry';
-                btn.disabled = false;
-            }
-        } catch (err) {
-            resultDiv.innerHTML = `
-                <div class="command-result error">
-                    <div class="result-label">Error</div>
-                    <div class="result-value">${escapeHtml(err.toString())}</div>
-                </div>
-            `;
-            btn.textContent = 'Retry';
-            btn.disabled = false;
-        }
-    }
-    
-    // Copy all details including fetched IP
-    function copyAllWithIP() {
-        if (!currentDeployConfig || !fetchedPrivateIP) {
-            alert('Please fetch details first');
-            return;
-        }
-        
-        const details = `AlloyDB Connection Details
-========================
-Host: ${fetchedPrivateIP}
-Port: ${currentDeployConfig.database_port}
-Database: postgres
-User: ${currentDeployConfig.database_user}
-Password: <<your_set_password>>
-
-Cluster: ${currentDeployConfig.cluster_name}
-Instance: ${currentDeployConfig.instance_name}
-Region: ${currentDeployConfig.region}
-Project: ${currentDeployConfig.project_id}
-Network: ${currentDeployConfig.network}
-Subnet: ${currentDeployConfig.subnet}`;
-        
-        navigator.clipboard.writeText(details).then(() => {
-            event.target.textContent = 'Copied!';
-            setTimeout(() => { event.target.textContent = 'Copy All'; }, 2000);
-        });
-    }
-    
     // Run a command and display the result
     async function runCommand(commandType, btn) {
         if (!currentDeployConfig) {
@@ -675,7 +560,7 @@ Subnet: ${currentDeployConfig.subnet}`;
             return;
         }
         
-        const resultId = commandType === 'get_ip' ? 'result-get-ip' : 'result-firewall';
+        const resultId = 'result-get-ip';
         const resultDiv = document.getElementById(resultId);
         
         // Show loading state
@@ -737,6 +622,173 @@ Subnet: ${currentDeployConfig.subnet}`;
         }
     }
     
+    // Store fetched IP
+    let fetchedPrivateIP = null;
+    
+    // Fetch IP and Copy All - main action button
+    async function fetchAndCopyAll(btn) {
+        if (!currentDeployConfig) {
+            alert('No deployment configuration available');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span style="font-size: 14px;">⟳</span> Fetching...';
+        
+        const resultArea = document.getElementById('fetch-result-area');
+        resultArea.innerHTML = `
+            <div class="command-result loading" style="margin-bottom: 16px;">
+                <div class="result-value">Securely fetching your private IP...</div>
+            </div>
+        `;
+        
+        try {
+            const formData = new FormData();
+            formData.append('command_type', 'get_ip');
+            formData.append('project_id', currentDeployConfig.project_id);
+            formData.append('region', currentDeployConfig.region);
+            formData.append('cluster', currentDeployConfig.cluster_name);
+            formData.append('instance', currentDeployConfig.instance_name);
+            
+            const response = await fetch('/run-command', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                fetchedPrivateIP = data.output;
+                
+                // Build the details string
+                const details = `AlloyDB Connection Details
+========================
+Host: ${fetchedPrivateIP}
+Port: ${currentDeployConfig.database_port}
+Database: postgres
+User: ${currentDeployConfig.database_user}
+Password: <<your_set_password>>
+
+Cluster: ${currentDeployConfig.cluster_name}
+Instance: ${currentDeployConfig.instance_name}
+Region: ${currentDeployConfig.region}
+Project: ${currentDeployConfig.project_id}
+Network: ${currentDeployConfig.network}
+Subnet: ${currentDeployConfig.subnet}`;
+                
+                // Copy to clipboard
+                await navigator.clipboard.writeText(details);
+                
+                // Display nicely
+                resultArea.innerHTML = `
+                    <div class="command-result success" style="margin-bottom: 16px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="color: #81c995; font-weight: 600;">✓ Copied to clipboard!</span>
+                        </div>
+                        <div style="background: #1a1a1a; border-radius: 4px; padding: 12px; font-family: 'Consolas', monospace; font-size: 12px;">
+                            <div class="summary-grid" style="gap: 4px 16px;">
+                                <span class="summary-label">Host</span>
+                                <span class="summary-value" style="color: #81c995; font-weight: 600;">${escapeHtml(fetchedPrivateIP)}</span>
+                                <span class="summary-label">Port</span>
+                                <span class="summary-value">${escapeHtml(currentDeployConfig.database_port)}</span>
+                                <span class="summary-label">Database</span>
+                                <span class="summary-value">postgres</span>
+                                <span class="summary-label">User</span>
+                                <span class="summary-value">${escapeHtml(currentDeployConfig.database_user)}</span>
+                                <span class="summary-label">Password</span>
+                                <span class="summary-value" style="color: #888;">&lt;&lt;your_set_password&gt;&gt;</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                btn.innerHTML = '<span style="font-size: 14px;">✓</span> Copied!';
+                btn.style.background = '#34a853';
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<span style="font-size: 14px;">↓</span> Fetch & Copy All';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 3000);
+                
+            } else {
+                resultArea.innerHTML = `
+                    <div class="command-result error" style="margin-bottom: 16px;">
+                        <div class="result-label">Error</div>
+                        <div class="result-value">${escapeHtml(data.message || 'Failed to fetch IP')}</div>
+                    </div>
+                `;
+                btn.innerHTML = '<span style="font-size: 14px;">↓</span> Retry';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            resultArea.innerHTML = `
+                <div class="command-result error" style="margin-bottom: 16px;">
+                    <div class="result-label">Error</div>
+                    <div class="result-value">${escapeHtml(err.toString())}</div>
+                </div>
+            `;
+            btn.innerHTML = '<span style="font-size: 14px;">↓</span> Retry';
+            btn.disabled = false;
+        }
+    }
+    
+    // Run manual IP fetch (for the CLI section)
+    async function runManualIP(btn) {
+        if (!currentDeployConfig) {
+            alert('No deployment configuration available');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.textContent = 'Running...';
+        
+        const resultDiv = document.getElementById('manual-ip-result');
+        resultDiv.innerHTML = `
+            <div class="command-result loading" style="margin-top: 10px;">
+                <div class="result-value">Fetching IP...</div>
+            </div>
+        `;
+        
+        try {
+            const formData = new FormData();
+            formData.append('command_type', 'get_ip');
+            formData.append('project_id', currentDeployConfig.project_id);
+            formData.append('region', currentDeployConfig.region);
+            formData.append('cluster', currentDeployConfig.cluster_name);
+            formData.append('instance', currentDeployConfig.instance_name);
+            
+            const response = await fetch('/run-command', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                resultDiv.innerHTML = `
+                    <div class="command-result success" style="margin-top: 10px;">
+                        <div class="result-label">Private IP</div>
+                        <div class="result-value" style="font-size: 14px; font-weight: 600;">${escapeHtml(data.output)}</div>
+                        <div class="result-copy">
+                            <button class="copy-btn" onclick="copyCommand(this, '${escapeHtml(data.output)}')">Copy</button>
+                        </div>
+                    </div>
+                `;
+                btn.textContent = 'Done';
+                btn.style.background = '#34a853';
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="command-result error" style="margin-top: 10px;">
+                        <div class="result-value">${escapeHtml(data.message || data.output)}</div>
+                    </div>
+                `;
+                btn.textContent = 'Retry';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            resultDiv.innerHTML = `
+                <div class="command-result error" style="margin-top: 10px;">
+                    <div class="result-value">${escapeHtml(err.toString())}</div>
+                </div>
+            `;
+            btn.textContent = 'Retry';
+            btn.disabled = false;
+        }
+    }
+    
     // Render summary panel
     function renderSummary(summary) {
         if (!summary) return;
@@ -749,39 +801,68 @@ Subnet: ${currentDeployConfig.subnet}`;
         currentDeployConfig = conn;
         
         panel.innerHTML = `
-            <div class="quick-actions">
-                <div class="quick-actions-header">
-                    <span class="quick-actions-title">Connection Details</span>
-                    <div class="quick-actions-buttons">
-                        <button class="action-btn primary" id="get-all-btn" onclick="getAllDetails(this)">Get All Details</button>
-                    </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div>
+                    <div style="font-size: 14px; font-weight: 600; color: #e0e0e0;">Connection Details</div>
+                    <div style="font-size: 11px; color: #888; margin-top: 4px;">Your AlloyDB instance connection information</div>
                 </div>
-                <div class="quick-actions-hint">
-                    This will securely fetch your instance's private IP and display all connection details.
-                </div>
-                <div id="quick-actions-result" class="quick-actions-result"></div>
+                <button class="action-btn primary" id="fetch-copy-btn" onclick="fetchAndCopyAll(this)" style="display: flex; align-items: center; gap: 6px; padding: 10px 16px;">
+                    <span style="font-size: 14px;">↓</span> Fetch & Copy All
+                </button>
             </div>
             
+            <div class="quick-actions-hint" style="margin-bottom: 16px; background: #2a2a1e; border-left-color: #b8860b;">
+                <span style="color: #daa520;">⚠</span> Run this only in a secure environment. This will fetch your private IP and copy all details to clipboard.
+            </div>
+            
+            <div id="fetch-result-area"></div>
+            
             <div class="summary-section">
-                <div class="summary-section-title">Run Command Manually</div>
+                <div class="summary-section-title">Basic Info</div>
+                <div class="summary-grid">
+                    <span class="summary-label">Cluster</span>
+                    <span class="summary-value">${escapeHtml(conn.cluster_name)}</span>
+                    <span class="summary-label">Instance</span>
+                    <span class="summary-value">${escapeHtml(conn.instance_name)}</span>
+                    <span class="summary-label">Region</span>
+                    <span class="summary-value">${escapeHtml(conn.region)}</span>
+                    <span class="summary-label">Project</span>
+                    <span class="summary-value">${escapeHtml(conn.project_id)}</span>
+                </div>
+            </div>
+            
+            <div class="summary-section" style="margin-top: 16px;">
+                <div class="summary-section-title">Network</div>
+                <div class="summary-grid">
+                    <span class="summary-label">VPC Network</span>
+                    <span class="summary-value">${escapeHtml(conn.network)}</span>
+                    <span class="summary-label">Subnet</span>
+                    <span class="summary-value">${escapeHtml(conn.subnet)}</span>
+                </div>
+            </div>
+            
+            <div class="summary-section" style="margin-top: 16px;">
+                <div class="summary-section-title">Manual Command</div>
                 
                 <div class="command-accordion">
                     <div class="command-header" onclick="toggleCommand(this)">
                         <div class="command-header-left">
-                            <span class="command-step">?</span>
+                            <span class="command-step">1</span>
                             <span class="command-title">Get Private IP via CLI</span>
                         </div>
                         <span class="command-toggle">▼</span>
                     </div>
                     <div class="command-body">
                         <div class="command-description">
-                            Alternatively, run this command in your terminal to get the private IP.
+                            Run this command in your terminal to get the private IP manually.
                         </div>
                         <div class="command-code">
                             <div class="cmd-buttons">
+                                <button class="run-btn" onclick="runManualIP(this)">Run</button>
                                 <button class="copy-btn" onclick="copyCommand(this, \`${cmds.get_ip.replace(/`/g, '\\`')}\`)">Copy</button>
                             </div>
 ${escapeHtml(cmds.get_ip)}</div>
+                        <div id="manual-ip-result"></div>
                     </div>
                 </div>
             </div>
