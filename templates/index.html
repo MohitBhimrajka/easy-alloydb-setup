@@ -553,78 +553,81 @@
     // Store current deployment config for running commands
     let currentDeployConfig = null;
     
-    // Run all commands sequentially
-    async function runAll(btn) {
+    // Store fetched IP
+    let fetchedPrivateIP = null;
+    
+    // Get All Details - fetches IP and displays everything
+    async function getAllDetails(btn) {
         if (!currentDeployConfig) {
             alert('No deployment configuration available');
             return;
         }
         
         btn.disabled = true;
-        btn.textContent = 'Running...';
+        btn.textContent = 'Fetching...';
         
         const resultDiv = document.getElementById('quick-actions-result');
         resultDiv.innerHTML = `
             <div class="command-result loading">
-                <div class="result-label">Step 1/2: Getting Private IP...</div>
-                <div class="result-value">Please wait...</div>
+                <div class="result-label">Securely fetching your instance details...</div>
+                <div class="result-value">Retrieving Private IP from AlloyDB...</div>
             </div>
         `;
         
         try {
-            // Step 1: Get IP
-            const ipFormData = new FormData();
-            ipFormData.append('command_type', 'get_ip');
-            ipFormData.append('project_id', currentDeployConfig.project_id);
-            ipFormData.append('region', currentDeployConfig.region);
-            ipFormData.append('cluster', currentDeployConfig.cluster_name);
-            ipFormData.append('instance', currentDeployConfig.instance_name);
+            const formData = new FormData();
+            formData.append('command_type', 'get_ip');
+            formData.append('project_id', currentDeployConfig.project_id);
+            formData.append('region', currentDeployConfig.region);
+            formData.append('cluster', currentDeployConfig.cluster_name);
+            formData.append('instance', currentDeployConfig.instance_name);
             
-            const ipResponse = await fetch('/run-command', { method: 'POST', body: ipFormData });
-            const ipData = await ipResponse.json();
+            const response = await fetch('/run-command', { method: 'POST', body: formData });
+            const data = await response.json();
             
-            let privateIP = ipData.status === 'success' ? ipData.output : 'Failed to retrieve';
-            
-            // Update progress
-            resultDiv.innerHTML = `
-                <div class="command-result loading">
-                    <div class="result-label">Step 2/2: Creating Firewall Rule...</div>
-                    <div class="result-value">Private IP: ${escapeHtml(privateIP)}</div>
-                </div>
-            `;
-            
-            // Step 2: Create Firewall
-            const fwFormData = new FormData();
-            fwFormData.append('command_type', 'create_firewall');
-            fwFormData.append('project_id', currentDeployConfig.project_id);
-            fwFormData.append('region', currentDeployConfig.region);
-            fwFormData.append('cluster', currentDeployConfig.cluster_name);
-            fwFormData.append('instance', currentDeployConfig.instance_name);
-            
-            const fwResponse = await fetch('/run-command', { method: 'POST', body: fwFormData });
-            const fwData = await fwResponse.json();
-            
-            // Show final results
-            const fwStatus = fwData.status === 'success' ? 'Created' : 'Failed';
-            
-            resultDiv.innerHTML = `
-                <div class="command-result success">
-                    <div class="result-label">All Commands Complete</div>
-                    <div class="summary-grid" style="margin-top: 8px;">
-                        <span class="summary-label">Private IP</span>
-                        <span class="summary-value">${escapeHtml(privateIP)}</span>
-                        <span class="summary-label">Firewall</span>
-                        <span class="summary-value">${escapeHtml(fwData.message || fwStatus)}</span>
+            if (data.status === 'success') {
+                fetchedPrivateIP = data.output;
+                
+                resultDiv.innerHTML = `
+                    <div class="command-result success" style="padding: 16px;">
+                        <div class="result-label" style="margin-bottom: 12px;">All Connection Details</div>
+                        <div class="summary-grid" style="gap: 6px 16px;">
+                            <span class="summary-label">Host (Private IP)</span>
+                            <span class="summary-value" style="color: #81c995; font-weight: 600;">${escapeHtml(fetchedPrivateIP)}</span>
+                            <span class="summary-label">Port</span>
+                            <span class="summary-value">${escapeHtml(currentDeployConfig.database_port)}</span>
+                            <span class="summary-label">Database</span>
+                            <span class="summary-value">postgres</span>
+                            <span class="summary-label">User</span>
+                            <span class="summary-value">${escapeHtml(currentDeployConfig.database_user)}</span>
+                            <span class="summary-label">Password</span>
+                            <span class="summary-value" style="color: #888;">&lt;&lt;your_set_password&gt;&gt;</span>
+                            <span class="summary-label">Cluster</span>
+                            <span class="summary-value">${escapeHtml(currentDeployConfig.cluster_name)}</span>
+                            <span class="summary-label">Region</span>
+                            <span class="summary-value">${escapeHtml(currentDeployConfig.region)}</span>
+                            <span class="summary-label">Network</span>
+                            <span class="summary-value">${escapeHtml(currentDeployConfig.network)}</span>
+                            <span class="summary-label">Subnet</span>
+                            <span class="summary-value">${escapeHtml(currentDeployConfig.subnet)}</span>
+                        </div>
+                        <div class="result-copy" style="margin-top: 12px;">
+                            <button class="action-btn secondary" style="padding: 6px 12px;" onclick="copyAllWithIP()">Copy All</button>
+                        </div>
                     </div>
-                    <div class="result-copy">
-                        <button class="copy-btn" onclick="copyCommand(this, '${escapeHtml(privateIP)}')">Copy IP</button>
+                `;
+                btn.textContent = 'Refresh';
+                btn.disabled = false;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="command-result error">
+                        <div class="result-label">Error fetching IP</div>
+                        <div class="result-value">${escapeHtml(data.message || data.output)}</div>
                     </div>
-                </div>
-            `;
-            
-            btn.textContent = 'Done';
-            btn.style.background = '#34a853';
-            
+                `;
+                btn.textContent = 'Retry';
+                btn.disabled = false;
+            }
         } catch (err) {
             resultDiv.innerHTML = `
                 <div class="command-result error">
@@ -637,29 +640,31 @@
         }
     }
     
-    // Copy all connection details
-    function copyAllDetails() {
-        if (!currentDeployConfig) {
-            alert('No deployment configuration available');
+    // Copy all details including fetched IP
+    function copyAllWithIP() {
+        if (!currentDeployConfig || !fetchedPrivateIP) {
+            alert('Please fetch details first');
             return;
         }
         
         const details = `AlloyDB Connection Details
 ========================
-Project ID: ${currentDeployConfig.project_id}
-Region: ${currentDeployConfig.region}
+Host: ${fetchedPrivateIP}
+Port: ${currentDeployConfig.database_port}
+Database: postgres
+User: ${currentDeployConfig.database_user}
+Password: <<your_set_password>>
+
 Cluster: ${currentDeployConfig.cluster_name}
 Instance: ${currentDeployConfig.instance_name}
-User: ${currentDeployConfig.database_user}
-Port: ${currentDeployConfig.database_port}
-Password: <<your_set_password>>
+Region: ${currentDeployConfig.region}
+Project: ${currentDeployConfig.project_id}
 Network: ${currentDeployConfig.network}
 Subnet: ${currentDeployConfig.subnet}`;
         
         navigator.clipboard.writeText(details).then(() => {
-            const btn = document.getElementById('copy-all-btn');
-            btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = 'Copy All'; }, 2000);
+            event.target.textContent = 'Copied!';
+            setTimeout(() => { event.target.textContent = 'Copy All'; }, 2000);
         });
     }
     
@@ -746,96 +751,37 @@ Subnet: ${currentDeployConfig.subnet}`;
         panel.innerHTML = `
             <div class="quick-actions">
                 <div class="quick-actions-header">
-                    <span class="quick-actions-title">Quick Actions</span>
+                    <span class="quick-actions-title">Connection Details</span>
                     <div class="quick-actions-buttons">
-                        <button class="action-btn primary" onclick="runAll(this)">Run All</button>
-                        <button class="action-btn secondary" id="copy-all-btn" onclick="copyAllDetails()">Copy All</button>
+                        <button class="action-btn primary" id="get-all-btn" onclick="getAllDetails(this)">Get All Details</button>
                     </div>
                 </div>
                 <div class="quick-actions-hint">
-                    Run All will fetch the private IP and create the firewall rule. Copy All includes all connection details.
+                    This will securely fetch your instance's private IP and display all connection details.
                 </div>
                 <div id="quick-actions-result" class="quick-actions-result"></div>
             </div>
             
             <div class="summary-section">
-                <div class="summary-section-title">Database Connection</div>
-                <div class="summary-grid">
-                    <span class="summary-label">Cluster</span>
-                    <span class="summary-value">${escapeHtml(conn.cluster_name)}</span>
-                    <span class="summary-label">Instance</span>
-                    <span class="summary-value">${escapeHtml(conn.instance_name)}</span>
-                    <span class="summary-label">User</span>
-                    <span class="summary-value">${escapeHtml(conn.database_user)}</span>
-                    <span class="summary-label">Port</span>
-                    <span class="summary-value">${escapeHtml(conn.database_port)}</span>
-                    <span class="summary-label">Password</span>
-                    <span class="summary-value" style="color: #888;">&lt;&lt;your_set_password&gt;&gt;</span>
-                </div>
-            </div>
-            
-            <div class="summary-section">
-                <div class="summary-section-title">Network Configuration</div>
-                <div class="summary-grid">
-                    <span class="summary-label">Project ID</span>
-                    <span class="summary-value">${escapeHtml(conn.project_id)}</span>
-                    <span class="summary-label">Region</span>
-                    <span class="summary-value">${escapeHtml(conn.region)}</span>
-                    <span class="summary-label">VPC Network</span>
-                    <span class="summary-value">${escapeHtml(conn.network)}</span>
-                    <span class="summary-label">Subnet</span>
-                    <span class="summary-value">${escapeHtml(conn.subnet)}</span>
-                    <span class="summary-label">IP Range</span>
-                    <span class="summary-value">${escapeHtml(conn.ip_range)}</span>
-                </div>
-            </div>
-            
-            <div class="summary-section">
-                <div class="summary-section-title">Manual Commands</div>
+                <div class="summary-section-title">Run Command Manually</div>
                 
                 <div class="command-accordion">
                     <div class="command-header" onclick="toggleCommand(this)">
                         <div class="command-header-left">
-                            <span class="command-step">1</span>
-                            <span class="command-title">Get Instance Private IP</span>
+                            <span class="command-step">?</span>
+                            <span class="command-title">Get Private IP via CLI</span>
                         </div>
                         <span class="command-toggle">▼</span>
                     </div>
                     <div class="command-body">
                         <div class="command-description">
-                            Retrieve the private IP address of your AlloyDB instance. 
-                            You'll need this IP to configure your application's database connection.
+                            Alternatively, run this command in your terminal to get the private IP.
                         </div>
                         <div class="command-code">
                             <div class="cmd-buttons">
-                                <button class="run-btn" id="run-get-ip" onclick="runCommand('get_ip', this)">Run</button>
                                 <button class="copy-btn" onclick="copyCommand(this, \`${cmds.get_ip.replace(/`/g, '\\`')}\`)">Copy</button>
                             </div>
 ${escapeHtml(cmds.get_ip)}</div>
-                        <div id="result-get-ip"></div>
-                    </div>
-                </div>
-                
-                <div class="command-accordion">
-                    <div class="command-header" onclick="toggleCommand(this)">
-                        <div class="command-header-left">
-                            <span class="command-step">2</span>
-                            <span class="command-title">Create Firewall Rule</span>
-                        </div>
-                        <span class="command-toggle">▼</span>
-                    </div>
-                    <div class="command-body">
-                        <div class="command-description">
-                            Create a firewall rule to allow internal traffic to AlloyDB on port 5432. 
-                            This is required for services within the VPC to connect to your database.
-                        </div>
-                        <div class="command-code">
-                            <div class="cmd-buttons">
-                                <button class="run-btn" id="run-firewall" onclick="runCommand('create_firewall', this)">Run</button>
-                                <button class="copy-btn" onclick="copyCommand(this, \`${cmds.firewall.replace(/`/g, '\\`')}\`)">Copy</button>
-                            </div>
-${escapeHtml(cmds.firewall)}</div>
-                        <div id="result-firewall"></div>
                     </div>
                 </div>
             </div>
